@@ -1,0 +1,2 @@
+primary_dsn: postgres://postgres:postgres@localhost:58184/voter-outreach-new?sslmode=disable
+replica_dsn: postgres://postgres:postgres@localhost:58185/voter-outreach-new?sslmode=disable
