@@ -1,4 +1,5 @@
 # Binaries
+postgres-test-replay
 *.exe
 *.exe~
 *.dll
@@ -31,6 +32,7 @@ vendor/
 Thumbs.db
 
 # Application specific
+config.json
 *.log
 *.db
 waldata/
