@@ -69,12 +69,18 @@ func ParseDSN(dsn string) (*DatabaseConfig, error) {
 		sslmode = "disable"
 	}
 
+	// Extract database name from path, handling empty path
+	database := ""
+	if len(u.Path) > 1 {
+		database = u.Path[1:] // Remove leading /
+	}
+
 	return &DatabaseConfig{
 		Host:     u.Hostname(),
 		Port:     port,
 		User:     u.User.Username(),
 		Password: password,
-		Database: u.Path[1:], // Remove leading /
+		Database: database,
 		SSLMode:  sslmode,
 	}, nil
 }
@@ -111,8 +117,10 @@ func LoadFromEnv(envPath string) (*Config, error) {
 	// Parse server configuration
 	serverPort := 8080
 	if portStr := os.Getenv("SERVER_PORT"); portStr != "" {
-		if p, err := strconv.Atoi(portStr); err == nil {
+		if p, err := strconv.Atoi(portStr); err == nil && p > 0 {
 			serverPort = p
+		} else {
+			return nil, fmt.Errorf("invalid SERVER_PORT: %s", portStr)
 		}
 	}
 

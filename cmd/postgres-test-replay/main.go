@@ -60,11 +60,16 @@ func main() {
 func loadConfig(envPath, configPath string) (*config.Config, error) {
 	// Try .env first
 	if envPath != "" {
-		if cfg, err := config.LoadFromEnv(envPath); err == nil {
+		cfg, err := config.LoadFromEnv(envPath)
+		if err == nil {
 			log.Printf("Loaded configuration from %s", envPath)
 			return cfg, nil
+		}
+		// Check if it's a file not found error
+		if os.IsNotExist(err) {
+			log.Printf("Note: .env file not found at %s, will try other config sources", envPath)
 		} else {
-			log.Printf("Warning: Failed to load .env file: %v", err)
+			log.Printf("Warning: Failed to parse .env file: %v", err)
 		}
 	}
 
