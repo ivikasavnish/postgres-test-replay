@@ -1,5 +1,6 @@
 # Binaries
 postgres-test-replay
+main
 *.exe
 *.exe~
 *.dll
