@@ -201,6 +201,9 @@ func (l *Listener) handleDelete(msg *pglogrepl.DeleteMessage, lsn pglogrepl.LSN)
 func (l *Listener) tupleToMap(tuple *pglogrepl.TupleData) map[string]interface{} {
 	result := make(map[string]interface{})
 
+	// Note: Using generic column names here as relation metadata is not readily available
+	// in the current message context. For production use, consider maintaining a cache
+	// of relation ID -> column metadata mapping from RelationMessage events.
 	for i, col := range tuple.Columns {
 		key := fmt.Sprintf("col_%d", i)
 

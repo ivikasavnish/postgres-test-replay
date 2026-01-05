@@ -220,6 +220,11 @@ func (m *Manager) save() error {
 		return fmt.Errorf("failed to encode sessions: %w", err)
 	}
 
+	// Sync to disk to ensure data is persisted
+	if err := file.Sync(); err != nil {
+		return fmt.Errorf("failed to sync session file: %w", err)
+	}
+
 	return nil
 }
 

@@ -126,8 +126,10 @@ func (lr *LogReader) readFile(filename string) ([]*WALEntry, error) {
 
 	entries := make([]*WALEntry, 0)
 	scanner := bufio.NewScanner(file)
+	lineNum := 0
 
 	for scanner.Scan() {
+		lineNum++
 		line := scanner.Bytes()
 		if len(line) == 0 {
 			continue
@@ -135,6 +137,8 @@ func (lr *LogReader) readFile(filename string) ([]*WALEntry, error) {
 
 		entry := &WALEntry{}
 		if err := json.Unmarshal(line, entry); err != nil {
+			// Log the error but continue processing other entries
+			fmt.Fprintf(os.Stderr, "Warning: Failed to parse WAL entry at %s:%d: %v\n", filename, lineNum, err)
 			continue
 		}
 

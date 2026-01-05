@@ -150,6 +150,11 @@ func (m *Manager) save() error {
 		return fmt.Errorf("failed to encode checkpoints: %w", err)
 	}
 
+	// Sync to disk to ensure data is persisted
+	if err := file.Sync(); err != nil {
+		return fmt.Errorf("failed to sync checkpoint file: %w", err)
+	}
+
 	return nil
 }
 
