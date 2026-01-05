@@ -32,6 +32,7 @@ vendor/
 Thumbs.db
 
 # Application specific
+.env
 config.json
 *.log
 *.db

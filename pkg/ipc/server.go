@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/ivikasavnish/postgres-test-replay/pkg/checkpoint"
@@ -36,6 +37,7 @@ func NewServer(cfg *config.Config, cpMgr *checkpoint.Manager, sessMgr *session.M
 func (s *Server) Start(addr string) error {
 	mux := http.NewServeMux()
 
+	// API endpoints
 	mux.HandleFunc("/api/sessions", s.handleSessions)
 	mux.HandleFunc("/api/sessions/", s.handleSession)
 	mux.HandleFunc("/api/sessions/switch", s.handleSwitchSession)
@@ -43,7 +45,15 @@ func (s *Server) Start(addr string) error {
 	mux.HandleFunc("/api/checkpoints/", s.handleCheckpoint)
 	mux.HandleFunc("/api/replay", s.handleReplay)
 	mux.HandleFunc("/api/navigate", s.handleNavigate)
+	mux.HandleFunc("/api/config", s.handleConfig)
+	mux.HandleFunc("/api/wal-logs", s.handleWALLogs)
 	mux.HandleFunc("/health", s.handleHealth)
+
+	// Serve UI files
+	if s.config.Server.UIPath != "" {
+		fs := http.FileServer(http.Dir(s.config.Server.UIPath))
+		mux.Handle("/", fs)
+	}
 
 	s.server = &http.Server{
 		Addr:    addr,
@@ -56,6 +66,9 @@ func (s *Server) Start(addr string) error {
 	}
 
 	fmt.Printf("IPC Server listening on %s\n", addr)
+	if s.config.Server.UIPath != "" {
+		fmt.Printf("UI available at http://localhost%s\n", addr)
+	}
 	return s.server.Serve(listener)
 }
 
@@ -297,5 +310,63 @@ func (s *Server) handleReplay(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":          "success",
 		"entries_applied": len(entries),
+	})
+}
+
+func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	response := map[string]interface{}{
+		"input_dsn":  s.config.PrimaryDB.ToDSN(),
+		"output_dsn": s.config.ReplicaDB.ToDSN(),
+		"server": map[string]interface{}{
+			"port":    s.config.Server.Port,
+			"ui_path": s.config.Server.UIPath,
+		},
+		"storage": map[string]interface{}{
+			"wal_log_path":     s.config.Storage.WALLogPath,
+			"backup_path":      s.config.Storage.BackupPath,
+			"session_path":     s.config.Storage.SessionPath,
+			"checkpoint_path":  s.config.Storage.CheckpointPath,
+		},
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+func (s *Server) handleWALLogs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	limit := 100
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	walReader := wal.NewLogReader(s.config.Storage.WALLogPath)
+	entries, err := walReader.ReadAll()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Return the last N entries
+	start := 0
+	if len(entries) > limit {
+		start = len(entries) - limit
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"entries":     entries[start:],
+		"total_count": len(entries),
+		"returned":    len(entries[start:]),
 	})
 }
