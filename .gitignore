@@ -1,5 +1,6 @@
 # Binaries
 postgres-test-replay
+main
 *.exe
 *.exe~
 *.dll
@@ -40,3 +41,5 @@ waldata/
 backups/
 sessions/
 checkpoints/
+data/
+wal/
