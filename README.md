@@ -12,6 +12,9 @@ A comprehensive Golang-based solution for PostgreSQL database testing, replay, a
 6. **Session Management** - Create, switch, and manage multiple replay sessions
 7. **Database Replay** - Replay transactions from any checkpoint
 8. **Database Differential Support** - Track changes per database
+9. **🆕 Web UI** - Minimal web interface for visual management and monitoring
+10. **🆕 Environment Configuration** - Simple .env file-based configuration with DSN support
+11. **🆕 Fixed Checkpoints** - Two permanent reference points (Creation and Migration)
 
 ## Architecture
 
@@ -66,14 +69,54 @@ This starts two PostgreSQL instances:
 - Primary: `localhost:5432`
 - Replica: `localhost:5433`
 
-### 2. Create Configuration
+### 2. Setup Configuration (Choose One)
+
+**Option A: Using .env file (Recommended)**
+
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit .env with your database connections
+# INPUT_DSN=postgres://postgres:postgres@localhost:5432/testdb?sslmode=disable
+# OUTPUT_DSN=postgres://postgres:postgres@localhost:5433/testdb?sslmode=disable
+```
+
+**Option B: Using JSON config**
 
 ```bash
 cp config.example.json config.json
 # Edit config.json with your database settings
 ```
 
-### 3. Create a Database Backup
+### 3. Start the Services
+
+**Terminal 1 - Start WAL Listener:**
+```bash
+./postgres-test-replay -mode listener
+```
+
+**Terminal 2 - Start IPC Server with Web UI:**
+```bash
+./postgres-test-replay -mode ipc
+```
+
+**Terminal 3 - Open Web UI:**
+```bash
+# Open http://localhost:8080 in your browser
+```
+
+### 4. Use the Web UI
+
+The web interface provides:
+- 📊 Real-time database connection status with DSN display
+- 📌 Fixed checkpoints (Database Creation, Initial Migration)
+- ➕ Create custom checkpoints
+- 📝 View and scroll through WAL logs
+- 🎯 Navigate to any checkpoint
+- 📈 Statistics dashboard
+
+### 5. Create a Database Backup (Optional)
 
 ```bash
 ./postgres-test-replay -mode backup

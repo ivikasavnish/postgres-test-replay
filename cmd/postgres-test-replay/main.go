@@ -22,15 +22,16 @@ import (
 
 func main() {
 	var (
-		configPath = flag.String("config", "config.json", "Path to configuration file")
+		envPath    = flag.String("env", ".env", "Path to .env file")
+		configPath = flag.String("config", "", "Path to configuration file (optional, overrides .env)")
 		mode       = flag.String("mode", "listener", "Mode: listener, ipc, backup, restore")
-		addr       = flag.String("addr", ":8080", "IPC server address")
+		addr       = flag.String("addr", "", "IPC server address (optional, overrides config)")
 		backupName = flag.String("backup", "", "Backup file name for restore mode")
 		targetDB   = flag.String("target-db", "", "Target database for restore")
 	)
 	flag.Parse()
 
-	cfg, err := loadOrCreateConfig(*configPath)
+	cfg, err := loadConfig(*envPath, *configPath)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -39,7 +40,11 @@ func main() {
 	case "listener":
 		runListener(cfg)
 	case "ipc":
-		runIPC(cfg, *addr)
+		serverAddr := *addr
+		if serverAddr == "" {
+			serverAddr = fmt.Sprintf(":%d", cfg.Server.Port)
+		}
+		runIPC(cfg, serverAddr)
 	case "backup":
 		runBackup(cfg)
 	case "restore":
@@ -52,17 +57,38 @@ func main() {
 	}
 }
 
-func loadOrCreateConfig(path string) (*config.Config, error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		cfg := config.DefaultConfig()
-		if err := cfg.Save(path); err != nil {
-			return nil, fmt.Errorf("failed to save default config: %w", err)
+func loadConfig(envPath, configPath string) (*config.Config, error) {
+	// Try .env first
+	if envPath != "" {
+		cfg, err := config.LoadFromEnv(envPath)
+		if err == nil {
+			log.Printf("Loaded configuration from %s", envPath)
+			return cfg, nil
 		}
-		log.Printf("Created default config at %s", path)
-		return cfg, nil
+		// Check if it's a file not found error
+		if os.IsNotExist(err) {
+			log.Printf("Note: .env file not found at %s, will try other config sources", envPath)
+		} else {
+			log.Printf("Warning: Failed to parse .env file: %v", err)
+		}
 	}
 
-	return config.LoadConfig(path)
+	// Fall back to JSON config or default
+	if configPath != "" {
+		if _, err := os.Stat(configPath); err == nil {
+			cfg, err := config.LoadConfig(configPath)
+			if err != nil {
+				return nil, fmt.Errorf("failed to load config from %s: %w", configPath, err)
+			}
+			log.Printf("Loaded configuration from %s", configPath)
+			return cfg, nil
+		}
+	}
+
+	// Use default config
+	cfg := config.DefaultConfig()
+	log.Println("Using default configuration")
+	return cfg, nil
 }
 
 func runListener(cfg *config.Config) {
