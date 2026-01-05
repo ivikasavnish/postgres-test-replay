@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -116,27 +117,13 @@ func TestUpdateEnvFile(t *testing.T) {
 	}
 
 	contentStr := string(content)
-	if !stringContains(contentStr, primaryDSN) {
+	if !strings.Contains(contentStr, primaryDSN) {
 		t.Error("Primary DSN not found in .env file")
 	}
-	if !stringContains(contentStr, replicaDSN) {
+	if !strings.Contains(contentStr, replicaDSN) {
 		t.Error("Replica DSN not found in .env file")
 	}
-	if !stringContains(contentStr, serverPort) {
+	if !strings.Contains(contentStr, serverPort) {
 		t.Error("Server port not found in .env file")
 	}
-}
-
-func stringContains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 &&
-		(s == substr || len(s) >= len(substr) && findSubstring(s, substr))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

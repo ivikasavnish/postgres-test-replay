@@ -185,7 +185,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Updated config.yaml written successfully.")
+	fmt.Println("Updated config.yaml written successfully.")
 
 	// Step 6: Create/Update .env file
 	if err := updateEnvFile(INPUT_DSN, designedDSN, serverPort); err != nil {
