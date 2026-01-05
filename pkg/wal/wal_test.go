@@ -1,6 +1,7 @@
 package wal
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -209,7 +210,7 @@ func TestLogWriterConcurrentWrites(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func(id int) {
 			entry := &WALEntry{
-				ID:        string(rune('a' + id)),
+				ID:        fmt.Sprintf("test-%d", id),
 				Timestamp: time.Now(),
 				LSN:       "0/1234567",
 				Operation: OpInsert,
