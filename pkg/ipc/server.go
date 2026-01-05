@@ -327,10 +327,10 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 			"ui_path": s.config.Server.UIPath,
 		},
 		"storage": map[string]interface{}{
-			"wal_log_path":     s.config.Storage.WALLogPath,
-			"backup_path":      s.config.Storage.BackupPath,
-			"session_path":     s.config.Storage.SessionPath,
-			"checkpoint_path":  s.config.Storage.CheckpointPath,
+			"wal_log_path":    s.config.Storage.WALLogPath,
+			"backup_path":     s.config.Storage.BackupPath,
+			"session_path":    s.config.Storage.SessionPath,
+			"checkpoint_path": s.config.Storage.CheckpointPath,
 		},
 	}
 

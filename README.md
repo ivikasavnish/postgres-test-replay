@@ -59,6 +59,43 @@ go build -o postgres-test-replay ./cmd/postgres-test-replay
 
 ## Quick Start
 
+### Automated Setup (Recommended)
+
+The easiest way to get started is using the automated setup tool:
+
+```bash
+# 1. Build the setup tool
+go build -o pgparsers ./cmd/pgparsers
+
+# 2. Run the automated setup
+./pgparsers
+```
+
+This will:
+- ✅ Backup existing docker-compose.yml (keeps only 3 most recent backups)
+- ✅ Discover available ports from reserved pool (58180-58190)
+- ✅ Update docker-compose.yml with new ports
+- ✅ Generate/update .env file with DSN configurations
+- ✅ Stop existing Docker Compose services
+- ✅ Start new Docker Compose services
+
+After setup completes, follow the on-screen instructions to start the application:
+
+```bash
+# 3. Build the main application
+go build -o postgres-test-replay ./cmd/postgres-test-replay
+
+# 4. Start the IPC server with the discovered port (example)
+./postgres-test-replay -mode ipc -addr :58186
+
+# 5. Open the UI in your browser
+# http://localhost:58186
+```
+
+See [DOCKER_SETUP.md](DOCKER_SETUP.md) for detailed documentation.
+
+### Manual Setup (Advanced)
+
 ### 1. Start PostgreSQL with Docker Compose
 
 ```bash

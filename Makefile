@@ -1,8 +1,10 @@
-.PHONY: all build clean test fmt lint docker-up docker-down install help
+.PHONY: all build clean test fmt lint docker-up docker-down install help setup
 
 # Binary name
 BINARY=postgres-test-replay
+SETUP_BINARY=pgparsers
 CMD_PATH=./cmd/postgres-test-replay
+SETUP_CMD_PATH=./cmd/pgparsers
 
 # Build variables
 BUILD_FLAGS=-ldflags="-s -w"
@@ -13,9 +15,18 @@ all: fmt build
 build: ## Build the application
 	$(GO) build $(BUILD_FLAGS) -o $(BINARY) $(CMD_PATH)
 
+build-setup: ## Build the setup tool
+	$(GO) build $(BUILD_FLAGS) -o $(SETUP_BINARY) $(SETUP_CMD_PATH)
+
+setup: build-setup ## Run automated Docker Compose setup
+	./$(SETUP_BINARY)
+
 clean: ## Clean build artifacts
-	rm -f $(BINARY)
+	rm -f $(BINARY) $(SETUP_BINARY)
 	rm -rf waldata/ backups/ sessions/ checkpoints/ *.log
+
+clean-docker: ## Clean Docker data directories
+	rm -rf data/ wal/
 
 test: ## Run tests
 	$(GO) test -v ./...
@@ -30,7 +41,7 @@ install: ## Install dependencies
 	$(GO) mod download
 	$(GO) mod tidy
 
-docker-up: ## Start Docker Compose services
+docker-up: ## Start Docker Compose services (manual)
 	docker-compose up -d
 
 docker-down: ## Stop Docker Compose services
@@ -42,8 +53,8 @@ docker-logs: ## Show Docker Compose logs
 run-listener: build ## Run in listener mode
 	./$(BINARY) -mode listener
 
-run-ipc: build ## Run in IPC mode
-	./$(BINARY) -mode ipc -addr :8080
+run-ipc: build ## Run in IPC mode (use SERVER_PORT from .env)
+	./$(BINARY) -mode ipc
 
 run-backup: build ## Run backup
 	./$(BINARY) -mode backup
