@@ -1,0 +1,28 @@
+{
+  "primary_db": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "postgres",
+    "password": "postgres",
+    "database": "testdb",
+    "ssl_mode": "disable"
+  },
+  "replica_db": {
+    "host": "localhost",
+    "port": 5433,
+    "user": "postgres",
+    "password": "postgres",
+    "database": "testdb",
+    "ssl_mode": "disable"
+  },
+  "storage": {
+    "wal_log_path": "./waldata",
+    "backup_path": "./backups",
+    "session_path": "./sessions",
+    "checkpoint_path": "./checkpoints"
+  },
+  "replication": {
+    "slot_name": "test_slot",
+    "publication_name": "test_publication"
+  }
+}
